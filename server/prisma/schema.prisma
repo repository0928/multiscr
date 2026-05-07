@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Teacher {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique @db.VarChar(10)
+  password  String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  subjects  Subject[]
+  students  Student[]
+
+  @@map("teachers")
+}
+
+model Subject {
+  id        Int       @id @default(autoincrement())
+  teacherId Int       @map("teacher_id")
+  name      String    @db.VarChar(50)
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  teacher   Teacher        @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  items     ScoringItem[]
+  scores    Score[]
+
+  @@map("subjects")
+}
+
+model Student {
+  id        Int      @id @default(autoincrement())
+  teacherId Int      @map("teacher_id")
+  year      Int      @db.SmallInt
+  class     Int      @db.SmallInt
+  number    Int      @db.SmallInt
+  name      String   @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  scores    Score[]
+
+  @@map("students")
+}
+
+model ScoringItem {
+  id         Int      @id @default(autoincrement())
+  subjectId  Int      @map("subject_id")
+  name       String   @db.VarChar(50)
+  maxScore   Int      @map("max_score") @db.SmallInt
+  orderIndex Int      @map("order_index") @db.SmallInt
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  subject    Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  scores     Score[]
+
+  @@map("scoring_items")
+}
+
+model Score {
+  id         Int  @id @default(autoincrement())
+  subjectId  Int  @map("subject_id")
+  studentId  Int  @map("student_id")
+  itemId     Int  @map("item_id")
+  score      Int  @db.SmallInt
+
+  subject    Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  student    Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  item       ScoringItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([subjectId, studentId, itemId])
+  @@map("scores")
+}
