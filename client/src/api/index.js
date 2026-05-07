@@ -1,10 +1,8 @@
 import axios from 'axios'
 import router from '../router'
 
-// 支援 build-time 環境變數，或 runtime window.__API_URL__（由 nginx 注入）
-const baseURL = (import.meta.env.VITE_API_URL || window.__API_URL__ || '') + '/api'
-
-const api = axios.create({ baseURL })
+// 使用相對路徑，由 nginx 代理到後端
+const api = axios.create({ baseURL: '/api' })
 
 api.interceptors.request.use(cfg => {
   const token = localStorage.getItem('token')
