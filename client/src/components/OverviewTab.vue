@@ -24,7 +24,7 @@
           <tbody>
             <tr v-for="(s, idx) in store.students" :key="s.id"
               :class="['border-b border-gray-100', idx % 2 === 0 ? 'bg-white' : 'bg-gray-50', isFullScore(s) ? 'bg-red-50' : '']">
-              <td class="px-4 py-3 font-medium">{{ s.year }}-{{ s.number }} {{ s.name }}</td>
+              <td class="px-4 py-3 font-medium">{{ s.year }}年{{ s.class }}班{{ s.number }}號 {{ s.name }}</td>
               <td v-for="item in store.items" :key="item.id" class="px-4 py-3 text-center text-gray-700">
                 {{ store.getScore(s.id, item.id) }}
               </td>

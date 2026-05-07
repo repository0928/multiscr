@@ -15,7 +15,7 @@
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-3">
           <span class="font-bold text-gray-800">
-            {{ student.year }}-{{ student.number }} {{ student.name }}
+            {{ student.year }}年{{ student.class }}班{{ student.number }}號 {{ student.name }}
           </span>
           <span v-if="isFullScore(student)" class="bg-red-100 text-red-500 text-xs px-2 py-0.5 rounded-full font-medium">
             🏆 滿分

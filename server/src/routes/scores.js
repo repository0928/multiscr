@@ -77,7 +77,7 @@ router.get('/:subjectId/export', auth, async (req, res) => {
   ws.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
 
   students.forEach(s => {
-    const rowData = { student: `${s.year}-${s.number} ${s.name}` };
+    const rowData = { student: `${s.year}年${s.class}班${s.number}號 ${s.name}` };
     let total = 0;
     items.forEach(i => {
       const v = scoreMap[`${s.id}_${i.id}`] ?? 0;

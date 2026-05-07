@@ -60,7 +60,7 @@
       <div v-for="s in filtered" :key="s.id"
         class="flex items-center gap-3 border border-gray-100 rounded-xl p-3 hover:bg-gray-50">
         <input type="checkbox" :value="s.id" v-model="selected" class="w-4 h-4 shrink-0" />
-        <span class="text-sm flex-1">{{ s.year }}班{{ s.number }}號 {{ s.name }}</span>
+        <span class="text-sm flex-1">{{ s.year }}年{{ s.class }}班{{ s.number }}號 {{ s.name }}</span>
         <button @click="deleteSingle(s)" class="text-gray-300 hover:text-red-400 transition cursor-pointer">🗑️</button>
       </div>
     </div>
