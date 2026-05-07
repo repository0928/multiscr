@@ -47,19 +47,43 @@ router.delete('/', auth, async (req, res) => {
   res.json({ ok: true });
 });
 
-// CSV 匯入（年,班,號,姓名）
+// 下載範例 CSV
+router.get('/sample', auth, (req, res) => {
+  const sample = '年,班,號,姓名\n5,1,1,王小明\n5,1,2,李小華\n5,2,1,張小美\n';
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="students_sample.csv"');
+  res.send('﻿' + sample);
+});
+
+// CSV / TXT 匯入（支援有無標題列、尾逗號、欄位數不一致）
 router.post('/import', auth, upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: '未提供檔案' });
   try {
-    const text = req.file.buffer.toString('utf-8');
-    const records = parse(text, { columns: true, skip_empty_lines: true, trim: true });
-    const data = records.map(r => ({
-      year: parseInt(r['年'] || r['year']),
-      class: parseInt(r['班'] || r['class']),
-      number: parseInt(r['號'] || r['number']),
-      name: r['姓名'] || r['name'],
-      teacherId: req.teacherId,
-    })).filter(r => r.year && r.class && r.number && r.name);
+    const text = req.file.buffer.toString('utf-8').replace(/^﻿/, ''); // 移除 BOM
+
+    // 先用無標題模式解析所有列
+    const rawRecords = parse(text, {
+      skip_empty_lines: true,
+      trim: true,
+      relax_column_count: true, // 允許欄位數不一致
+    });
+
+    const data = [];
+    for (const row of rawRecords) {
+      // 判斷是否為標題列（第一欄是「年」或非數字）
+      if (isNaN(parseInt(row[0]))) continue;
+
+      const year   = parseInt(row[0]);
+      const cls    = parseInt(row[1]);
+      const number = parseInt(row[2]);
+      const name   = (row[3] || '').trim();
+
+      if (!year || !cls || !number || !name) continue;
+
+      data.push({ year, class: cls, number, name, teacherId: req.teacherId });
+    }
+
+    if (data.length === 0) return res.status(400).json({ error: '找不到有效的學生資料，請確認格式為：年,班,號,姓名' });
 
     const result = await prisma.student.createMany({ data, skipDuplicates: true });
     res.json({ imported: result.count });

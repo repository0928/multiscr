@@ -2,14 +2,20 @@
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
     <!-- 批量匯入 -->
     <div class="bg-white rounded-2xl shadow p-6">
-      <p class="text-xs text-gray-500 mb-2 font-medium">批量匯入（年,班,號,姓名）</p>
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-xs text-gray-500 font-medium">批量匯入（年,班,號,姓名）</p>
+        <button @click="downloadSample" class="text-xs text-indigo-500 hover:underline cursor-pointer flex items-center gap-1">
+          📄 下載範例檔
+        </button>
+      </div>
       <div class="flex items-center gap-3 mb-3">
         <label class="cursor-pointer bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm hover:bg-gray-50 transition">
           選擇檔案
-          <input type="file" accept=".csv" class="hidden" @change="onFileChange" ref="fileInput" />
+          <input type="file" accept=".csv,.txt" class="hidden" @change="onFileChange" ref="fileInput" />
         </label>
         <span class="text-sm text-gray-400 truncate max-w-[180px]">{{ fileName || '未選擇任何檔案' }}</span>
       </div>
+      <p class="text-xs text-gray-400 mb-3">支援 .csv 或 .txt，格式：年,班,號,姓名（可無標題列）</p>
       <button @click="importCSV" class="btn-dark w-full" :disabled="!file || importing">
         {{ importing ? '匯入中...' : '執行匯入' }}
       </button>
@@ -140,6 +146,13 @@ async function exportCSV() {
   const resp = await api.get('/students/export', { responseType: 'blob' })
   const url = URL.createObjectURL(resp.data)
   const a = document.createElement('a'); a.href = url; a.download = 'students.csv'; a.click()
+  URL.revokeObjectURL(url)
+}
+
+async function downloadSample() {
+  const resp = await api.get('/students/sample', { responseType: 'blob' })
+  const url = URL.createObjectURL(resp.data)
+  const a = document.createElement('a'); a.href = url; a.download = 'students_sample.csv'; a.click()
   URL.revokeObjectURL(url)
 }
 </script>
