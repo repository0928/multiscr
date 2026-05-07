@@ -20,7 +20,7 @@ router.post('/register', async (req, res) => {
   if (count > 0) return res.status(403).json({ error: '已有帳號，不可再次註冊' });
 
   const { username, password } = req.body;
-  if (!username || username.length !== 1) return res.status(400).json({ error: '帳號須為中文一個字' });
+  if (!username || username.trim().length === 0) return res.status(400).json({ error: '帳號不可空白' });
   if (!password || password.length !== 4) return res.status(400).json({ error: '密碼須為4個字元' });
 
   const hashed = await bcrypt.hash(password, 10);
@@ -48,7 +48,7 @@ router.put('/profile', auth, async (req, res) => {
   const data = {};
 
   if (username !== undefined) {
-    if (username.length !== 1) return res.status(400).json({ error: '帳號須為中文一個字' });
+    if (!username || username.trim().length === 0) return res.status(400).json({ error: '帳號不可空白' });
     // 確認不重複（排除自己）
     const existing = await prisma.teacher.findFirst({
       where: { username, id: { not: req.teacherId } }

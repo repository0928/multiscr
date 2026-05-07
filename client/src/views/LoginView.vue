@@ -13,9 +13,8 @@
           <p class="text-center text-amber-600 text-sm mb-4 bg-amber-50 rounded-lg p-3">
             系統尚無帳號，請建立第一個教師帳號
           </p>
-          <input v-model="username" maxlength="1" placeholder="帳號（中文一個字）"
-            class="input mb-3" @input="validateUsername" />
-          <p v-if="usernameError" class="text-red-500 text-xs mb-2">{{ usernameError }}</p>
+          <input v-model="username" maxlength="20" placeholder="帳號（可使用中文）"
+            class="input mb-3" />
           <input v-model="password" maxlength="4" type="password" placeholder="密碼（4個字元）"
             class="input mb-6" />
           <button @click="register" class="btn-primary w-full" :disabled="loading">
@@ -25,7 +24,7 @@
 
         <!-- 登入 -->
         <template v-else>
-          <input v-model="username" maxlength="1" placeholder="帳號（中文一個字）"
+          <input v-model="username" maxlength="20" placeholder="帳號"
             class="input mb-3" @keyup.enter="login" />
           <input v-model="password" maxlength="4" type="password" placeholder="密碼（4個字元）"
             class="input mb-6" @keyup.enter="login" />
@@ -66,11 +65,6 @@ onMounted(async () => {
   }
 })
 
-function validateUsername() {
-  const ch = username.value
-  usernameError.value = ch && !/^[一-鿿]$/.test(ch) ? '帳號須為中文一個字' : ''
-}
-
 async function login() {
   error.value = ''
   loading.value = true
@@ -86,8 +80,7 @@ async function login() {
 
 async function register() {
   error.value = ''
-  if (usernameError.value) return
-  if (!username.value) { error.value = '請輸入帳號'; return }
+  if (!username.value.trim()) { error.value = '請輸入帳號'; return }
   if (password.value.length !== 4) { error.value = '密碼須為4個字元'; return }
   loading.value = true
   try {

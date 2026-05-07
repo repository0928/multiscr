@@ -2,8 +2,8 @@
   <Modal title="帳號設定" @close="$emit('close')">
     <p class="text-sm text-gray-500 mb-4">目前帳號：<strong>{{ currentUsername }}</strong></p>
 
-    <label class="text-xs text-gray-600 mb-1 block">新帳號（中文一個字，留空不更改）</label>
-    <input v-model="newUsername" maxlength="1" placeholder="新帳號" class="input mb-3" />
+    <label class="text-xs text-gray-600 mb-1 block">新帳號（留空不更改）</label>
+    <input v-model="newUsername" maxlength="20" placeholder="新帳號" class="input mb-3" />
 
     <label class="text-xs text-gray-600 mb-1 block">新密碼（4個字元，留空不更改）</label>
     <input v-model="newPassword" maxlength="4" type="password" placeholder="新密碼" class="input mb-5" />
