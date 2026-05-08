@@ -13,27 +13,25 @@
     <div v-for="student in filtered" :key="student.id"
       :class="['rounded-2xl p-5 mb-4 shadow', isFullScore(student) ? 'bg-red-50' : 'bg-white']">
       <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 flex-wrap">
           <span class="font-bold text-gray-800">
             {{ student.year }}年{{ student.class }}班{{ student.number }}號 {{ student.name }}
           </span>
+          <button @click="setFullScore(student)"
+            class="text-xs bg-red-500 text-white hover:bg-red-600 px-3 py-1 rounded-full transition cursor-pointer font-medium">
+            給滿分
+          </button>
+          <button @click="clearScore(student)"
+            class="text-xs bg-green-500 text-white hover:bg-green-600 px-3 py-1 rounded-full transition cursor-pointer font-medium">
+            清零
+          </button>
           <span v-if="isFullScore(student)" class="bg-red-100 text-red-500 text-xs px-2 py-0.5 rounded-full font-medium">
             🏆 滿分
           </span>
         </div>
-        <div class="flex items-center gap-3">
-          <button @click="setFullScore(student)"
-            class="text-xs bg-indigo-100 text-indigo-600 hover:bg-indigo-200 px-3 py-1 rounded-full transition cursor-pointer font-medium">
-            給滿分
-          </button>
-          <button @click="clearScore(student)"
-            class="text-xs bg-gray-100 text-gray-500 hover:bg-gray-200 px-3 py-1 rounded-full transition cursor-pointer font-medium">
-            清零
-          </button>
-          <span :class="['font-bold text-lg', isFullScore(student) ? 'text-indigo-600' : 'text-gray-700']">
-            {{ getTotal(student) }}/{{ maxTotal }}
-          </span>
-        </div>
+        <span :class="['font-bold text-lg', isFullScore(student) ? 'text-indigo-600' : 'text-gray-700']">
+          {{ getTotal(student) }}/{{ maxTotal }}
+        </span>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
