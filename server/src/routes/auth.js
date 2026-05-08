@@ -14,14 +14,14 @@ router.get('/status', async (req, res) => {
   res.json({ hasTeacher: count > 0 });
 });
 
-// 建立第一個老師帳號
+// 註冊新老師帳號
 router.post('/register', async (req, res) => {
-  const count = await prisma.teacher.count();
-  if (count > 0) return res.status(403).json({ error: '已有帳號，不可再次註冊' });
-
   const { username, password } = req.body;
   if (!username || username.trim().length === 0) return res.status(400).json({ error: '帳號不可空白' });
   if (!password || password.length !== 4) return res.status(400).json({ error: '密碼須為4個字元' });
+
+  const existing = await prisma.teacher.findUnique({ where: { username } });
+  if (existing) return res.status(409).json({ error: '帳號已被使用' });
 
   const hashed = await bcrypt.hash(password, 10);
   const teacher = await prisma.teacher.create({ data: { username, password: hashed } });

@@ -2,36 +2,26 @@
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100">
     <div class="bg-white rounded-2xl shadow-xl p-10 w-96">
       <h1 class="text-2xl font-bold text-center text-indigo-700 mb-2">多科目雲端評分系統</h1>
-      <p class="text-center text-gray-400 text-sm mb-8">教師登入</p>
+      <p class="text-center text-gray-400 text-sm mb-8">{{ isRegister ? '教師註冊' : '教師登入' }}</p>
 
-      <!-- 載入中 -->
       <div v-if="checking" class="text-center text-gray-400 py-4">載入中...</div>
 
       <template v-else>
-        <!-- 建立第一個帳號 -->
-        <template v-if="!hasTeacher">
-          <p class="text-center text-amber-600 text-sm mb-4 bg-amber-50 rounded-lg p-3">
-            系統尚無帳號，請建立第一個教師帳號
-          </p>
-          <input v-model="username" maxlength="20" placeholder="帳號（可使用中文）"
-            class="input mb-3" />
-          <input v-model="password" maxlength="4" type="password" placeholder="密碼（4個字元）"
-            class="input mb-6" />
-          <button @click="register" class="btn-primary w-full" :disabled="loading">
-            {{ loading ? '建立中...' : '建立帳號' }}
-          </button>
-        </template>
+        <input v-model="username" maxlength="20" :placeholder="isRegister ? '帳號（可使用中文）' : '帳號'"
+          class="input mb-3" @keyup.enter="isRegister ? register() : login()" />
+        <input v-model="password" maxlength="4" type="password" placeholder="密碼（4個字元）"
+          class="input mb-6" @keyup.enter="isRegister ? register() : login()" />
 
-        <!-- 登入 -->
-        <template v-else>
-          <input v-model="username" maxlength="20" placeholder="帳號"
-            class="input mb-3" @keyup.enter="login" />
-          <input v-model="password" maxlength="4" type="password" placeholder="密碼（4個字元）"
-            class="input mb-6" @keyup.enter="login" />
-          <button @click="login" class="btn-primary w-full" :disabled="loading">
-            {{ loading ? '登入中...' : '登入' }}
+        <button @click="isRegister ? register() : login()" class="btn-primary w-full" :disabled="loading">
+          {{ loading ? (isRegister ? '建立中...' : '登入中...') : (isRegister ? '建立帳號' : '登入') }}
+        </button>
+
+        <p class="text-center text-sm mt-5">
+          <span class="text-gray-400">{{ isRegister ? '已有帳號？' : '還沒有帳號？' }}</span>
+          <button @click="switchMode" class="text-indigo-600 hover:underline ml-1 cursor-pointer">
+            {{ isRegister ? '前往登入' : '立即註冊' }}
           </button>
-        </template>
+        </p>
       </template>
 
       <p v-if="error" class="text-red-500 text-sm text-center mt-4">{{ error }}</p>
@@ -45,25 +35,31 @@ import { useRouter } from 'vue-router'
 import api from '../api'
 
 const router = useRouter()
-const hasTeacher = ref(false)
 const checking = ref(true)
+const isRegister = ref(false)
 const username = ref('')
 const password = ref('')
 const error = ref('')
-const usernameError = ref('')
 const loading = ref(false)
 
 onMounted(async () => {
   try {
     const { data } = await api.get('/auth/status')
-    hasTeacher.value = data.hasTeacher
+    // 若系統尚無帳號，直接進入註冊模式
+    isRegister.value = !data.hasTeacher
   } catch (e) {
-    // API 失敗時預設顯示建立帳號（首次使用）
-    hasTeacher.value = false
+    isRegister.value = true
   } finally {
     checking.value = false
   }
 })
+
+function switchMode() {
+  isRegister.value = !isRegister.value
+  error.value = ''
+  username.value = ''
+  password.value = ''
+}
 
 async function login() {
   error.value = ''
