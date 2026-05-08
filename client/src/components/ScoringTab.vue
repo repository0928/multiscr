@@ -4,6 +4,8 @@
   <div v-else>
     <!-- 篩選列 -->
     <div class="bg-indigo-900 text-white rounded-2xl px-6 py-3 mb-4 flex items-center gap-4">
+      <input v-model="yearFilter" placeholder="篩選年級" type="number"
+        class="bg-indigo-800 text-white placeholder-indigo-300 rounded-lg px-3 py-1 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
       <input v-model="classFilter" placeholder="篩選班級" type="number"
         class="bg-indigo-800 text-white placeholder-indigo-300 rounded-lg px-3 py-1 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
       <span class="ml-auto text-sm opacity-70">人數：{{ filtered.length }}</span>
@@ -58,14 +60,18 @@ import { ref, computed } from 'vue'
 import { useAppStore } from '../stores/app'
 
 const store = useAppStore()
+const yearFilter = ref('')
 const classFilter = ref('')
 
 // 本地快取，避免每次 input 直接觸發 store
 const localChanges = ref({}) // key: `${studentId}_${itemId}` → value
 
 const filtered = computed(() => {
-  if (!classFilter.value) return store.students
-  return store.students.filter(s => s.class == classFilter.value)
+  return store.students.filter(s => {
+    if (yearFilter.value && s.year != yearFilter.value) return false
+    if (classFilter.value && s.class != classFilter.value) return false
+    return true
+  })
 })
 
 const maxTotal = computed(() => store.items.reduce((s, i) => s + i.maxScore, 0))

@@ -43,6 +43,7 @@
         <input type="checkbox" v-model="allSelected" class="w-4 h-4" /> 全選
       </label>
       <div class="flex items-center gap-3">
+        <input v-model="yearFilter" placeholder="篩選年級" class="border border-gray-300 rounded-lg px-3 py-1 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-indigo-300" type="number" />
         <input v-model="classFilter" placeholder="篩選班級" class="border border-gray-300 rounded-lg px-3 py-1 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-indigo-300" type="number" />
         <button @click="exportCSV" class="text-sm text-indigo-600 hover:underline cursor-pointer">匯出 CSV</button>
         <button @click="deleteSelected" :disabled="selected.length === 0"
@@ -78,14 +79,18 @@ const fileName = ref('')
 const fileInput = ref(null)
 const importing = ref(false)
 const importMsg = ref('')
+const yearFilter = ref('')
 const classFilter = ref('')
 const selected = ref([])
 const form = ref({ year: '', class: '', number: '', name: '' })
 const addError = ref('')
 
 const filtered = computed(() => {
-  if (!classFilter.value) return store.students
-  return store.students.filter(s => s.class == classFilter.value)
+  return store.students.filter(s => {
+    if (yearFilter.value && s.year != yearFilter.value) return false
+    if (classFilter.value && s.class != classFilter.value) return false
+    return true
+  })
 })
 
 const allSelected = computed({
