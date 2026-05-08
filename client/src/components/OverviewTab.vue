@@ -2,12 +2,22 @@
   <div class="bg-white rounded-2xl shadow p-6">
     <div v-if="!store.currentSubjectId" class="text-center text-gray-400 py-8">請先選擇科目</div>
     <template v-else>
-      <div class="flex items-center justify-between mb-5">
+      <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
         <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">📊 成績總表</h2>
-        <button @click="exportXlsx" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition cursor-pointer">
-          📁 匯出試算表
-        </button>
+        <div class="flex items-center gap-2 flex-wrap">
+          <button @click="downloadSample" class="bg-gray-100 text-gray-600 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition cursor-pointer">
+            📄 下載範例 xlsx
+          </button>
+          <label class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition cursor-pointer">
+            📂 匯入評分表
+            <input type="file" accept=".xlsx" class="hidden" @change="importXlsx" />
+          </label>
+          <button @click="exportXlsx" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition cursor-pointer">
+            📁 匯出試算表
+          </button>
+        </div>
       </div>
+      <p v-if="importMsg" :class="['text-sm mb-3', importMsg.startsWith('✅') ? 'text-green-600' : 'text-red-500']">{{ importMsg }}</p>
 
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
@@ -43,11 +53,12 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useAppStore } from '../stores/app'
 import api from '../api'
 
 const store = useAppStore()
+const importMsg = ref('')
 
 const maxTotal = computed(() => store.items.reduce((s, i) => s + i.maxScore, 0))
 
@@ -86,5 +97,26 @@ async function exportXlsx() {
   const url = URL.createObjectURL(resp.data)
   const a = document.createElement('a'); a.href = url; a.download = `${subjectName}.xlsx`; a.click()
   URL.revokeObjectURL(url)
+}
+
+async function downloadSample() {
+  const resp = await api.get(`/subjects/${store.currentSubjectId}/scores/sample`, { responseType: 'blob' })
+  const url = URL.createObjectURL(resp.data)
+  const a = document.createElement('a'); a.href = url; a.download = 'scores_sample.xlsx'; a.click()
+  URL.revokeObjectURL(url)
+}
+
+async function importXlsx(e) {
+  const file = e.target.files[0]; if (!file) return
+  importMsg.value = ''
+  const fd = new FormData(); fd.append('file', file)
+  try {
+    const { data } = await api.post(`/subjects/${store.currentSubjectId}/scores/import`, fd)
+    importMsg.value = `✅ 成功匯入 ${data.imported} 筆分數`
+    await store.loadScores()
+  } catch (err) {
+    importMsg.value = '❌ ' + (err.response?.data?.error || '匯入失敗')
+  }
+  e.target.value = ''
 }
 </script>

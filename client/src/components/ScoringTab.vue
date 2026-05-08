@@ -21,9 +21,19 @@
             🏆 滿分
           </span>
         </div>
-        <span :class="['font-bold text-lg', isFullScore(student) ? 'text-indigo-600' : 'text-gray-700']">
-          {{ getTotal(student) }}/{{ maxTotal }}
-        </span>
+        <div class="flex items-center gap-3">
+          <button @click="setFullScore(student)"
+            class="text-xs bg-indigo-100 text-indigo-600 hover:bg-indigo-200 px-3 py-1 rounded-full transition cursor-pointer font-medium">
+            給滿分
+          </button>
+          <button @click="clearScore(student)"
+            class="text-xs bg-gray-100 text-gray-500 hover:bg-gray-200 px-3 py-1 rounded-full transition cursor-pointer font-medium">
+            清零
+          </button>
+          <span :class="['font-bold text-lg', isFullScore(student) ? 'text-indigo-600' : 'text-gray-700']">
+            {{ getTotal(student) }}/{{ maxTotal }}
+          </span>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -91,5 +101,23 @@ function onSliderEnd(student, item, e) {
   saveTimers[key] = setTimeout(() => {
     store.saveScore(student.id, item.id, score)
   }, 300)
+}
+
+// 給滿分
+async function setFullScore(student) {
+  for (const item of store.items) {
+    const key = `${student.id}_${item.id}`
+    localChanges.value[key] = item.maxScore
+    await store.saveScore(student.id, item.id, item.maxScore)
+  }
+}
+
+// 清零
+async function clearScore(student) {
+  for (const item of store.items) {
+    const key = `${student.id}_${item.id}`
+    localChanges.value[key] = 0
+    await store.saveScore(student.id, item.id, 0)
+  }
 }
 </script>
