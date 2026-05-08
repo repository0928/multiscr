@@ -1,8 +1,19 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50">
     <!-- Header -->
-    <div class="text-center py-6">
+    <div class="flex items-center justify-between px-6 py-4">
       <h1 class="text-3xl font-bold text-gray-800">多科目雲端評分系統</h1>
+      <div class="flex items-center gap-3">
+        <span class="text-sm text-gray-500">登入：{{ username }}</span>
+        <button @click="showAccount = true"
+          class="bg-indigo-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-indigo-700 transition cursor-pointer flex items-center gap-1">
+          👤 帳號設定
+        </button>
+        <button @click="logout"
+          class="bg-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-300 transition cursor-pointer flex items-center gap-1">
+          🚪 登出
+        </button>
+      </div>
     </div>
 
     <!-- Subject Bar -->
@@ -27,18 +38,6 @@
 
     <!-- Account Modal -->
     <AccountModal v-if="showAccount" @close="showAccount = false" />
-
-    <!-- Floating account button -->
-    <button @click="showAccount = true"
-      class="fixed bottom-6 right-6 bg-indigo-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg hover:bg-indigo-700 text-lg"
-      title="帳號設定">
-      👤
-    </button>
-    <button @click="logout"
-      class="fixed bottom-6 right-20 bg-gray-500 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg hover:bg-gray-600 text-lg"
-      title="登出">
-      🚪
-    </button>
   </div>
 </template>
 
@@ -57,6 +56,7 @@ const store = useAppStore()
 const router = useRouter()
 const activeTab = ref('students')
 const showAccount = ref(false)
+const username = localStorage.getItem('username') || ''
 
 const tabs = [
   { key: 'students', label: '學生', icon: '👥' },
