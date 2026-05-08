@@ -11,12 +11,13 @@
       <p v-if="addError" class="text-red-500 text-xs mb-4">{{ addError }}</p>
 
       <!-- 匯入匯出 -->
-      <div class="flex gap-3 mb-5">
+      <div class="flex flex-wrap gap-3 mb-5 items-center">
         <label class="cursor-pointer text-sm text-indigo-600 hover:underline flex items-center gap-1">
-          📂 匯入 CSV
-          <input type="file" accept=".csv" class="hidden" @change="importItems" />
+          📂 匯入 CSV / TXT
+          <input type="file" accept=".csv,.txt" class="hidden" @change="importItems" />
         </label>
         <button @click="exportItems" class="text-sm text-indigo-600 hover:underline cursor-pointer">💾 匯出 CSV</button>
+        <button @click="downloadSample" class="text-sm text-indigo-600 hover:underline cursor-pointer">📄 下載範例檔</button>
         <span v-if="importMsg" :class="['text-xs', importMsg.startsWith('✅') ? 'text-green-600' : 'text-red-500']">{{ importMsg }}</span>
       </div>
 
@@ -101,6 +102,14 @@ async function exportItems() {
   const resp = await api.get(`/subjects/${store.currentSubjectId}/items/export`, { responseType: 'blob' })
   const url = URL.createObjectURL(resp.data)
   const a = document.createElement('a'); a.href = url; a.download = 'items.csv'; a.click()
+  URL.revokeObjectURL(url)
+}
+
+function downloadSample() {
+  const content = '名稱,滿分\n做完,50\n做對,30\n做好,20\n'
+  const blob = new Blob(['﻿' + content], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a'); a.href = url; a.download = 'items_sample.csv'; a.click()
   URL.revokeObjectURL(url)
 }
 </script>

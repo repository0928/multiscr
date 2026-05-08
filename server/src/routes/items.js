@@ -63,24 +63,30 @@ router.delete('/:subjectId/items/:itemId', auth, async (req, res) => {
   res.json({ ok: true });
 });
 
-// CSV 匯入（名稱,滿分）
+// CSV / TXT 匯入（名稱,滿分）— 支援有無標題列、BOM、尾逗號
 router.post('/:subjectId/items/import', auth, upload.single('file'), async (req, res) => {
   const subject = await getSubject(req.params.subjectId, req.teacherId);
   if (!subject) return res.status(404).json({ error: '找不到科目' });
   if (!req.file) return res.status(400).json({ error: '未提供檔案' });
   try {
-    const text = req.file.buffer.toString('utf-8');
-    const records = parse(text, { columns: true, skip_empty_lines: true, trim: true });
+    const text = req.file.buffer.toString('utf-8').replace(/^﻿/, ''); // 移除 BOM
+    const rawRecords = parse(text, { skip_empty_lines: true, trim: true, relax_column_count: true });
     const last = await prisma.scoringItem.findFirst({
       where: { subjectId: subject.id }, orderBy: { orderIndex: 'desc' },
     });
     let idx = (last?.orderIndex ?? -1) + 1;
-    const data = records.map(r => ({
-      name: r['名稱'] || r['name'],
-      maxScore: parseInt(r['滿分'] || r['maxScore']),
-      subjectId: subject.id,
-      orderIndex: idx++,
-    })).filter(r => r.name && r.maxScore);
+
+    const data = [];
+    for (const row of rawRecords) {
+      const col0 = (row[0] || '').trim();
+      const col1 = (row[1] || '').trim();
+      // 跳過標題列（第一欄是「名稱」或「name」）
+      if (col0 === '名稱' || col0.toLowerCase() === 'name') continue;
+      const name = col0;
+      const maxScore = parseInt(col1);
+      if (!name || isNaN(maxScore) || maxScore <= 0) continue;
+      data.push({ name, maxScore, subjectId: subject.id, orderIndex: idx++ });
+    }
     await prisma.scoringItem.createMany({ data });
     res.json({ imported: data.length });
   } catch (e) {
