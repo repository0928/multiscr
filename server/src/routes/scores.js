@@ -52,8 +52,12 @@ router.get('/:subjectId/export', auth, async (req, res) => {
   const subject = await getSubject(req.params.subjectId, req.teacherId);
   if (!subject) return res.status(404).json({ error: '找不到科目' });
 
+  const studentWhere = { teacherId: req.teacherId };
+  if (req.query.year) studentWhere.year = parseInt(req.query.year);
+  if (req.query.class) studentWhere.class = parseInt(req.query.class);
+
   const [students, items, scores] = await Promise.all([
-    prisma.student.findMany({ where: { teacherId: req.teacherId }, orderBy: [{ year: 'asc' }, { class: 'asc' }, { number: 'asc' }] }),
+    prisma.student.findMany({ where: studentWhere, orderBy: [{ year: 'asc' }, { class: 'asc' }, { number: 'asc' }] }),
     prisma.scoringItem.findMany({ where: { subjectId: subject.id }, orderBy: { orderIndex: 'asc' } }),
     prisma.score.findMany({ where: { subjectId: subject.id } }),
   ]);
