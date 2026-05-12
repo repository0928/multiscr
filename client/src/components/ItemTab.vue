@@ -24,11 +24,25 @@
       <!-- 項目清單 -->
       <div v-if="store.items.length === 0" class="text-center text-gray-400 py-6">尚無評分項目，請新增</div>
       <div v-for="(item, idx) in store.items" :key="item.id"
-        class="flex items-center gap-3 border border-gray-100 rounded-xl px-4 py-3 mb-2 hover:bg-gray-50">
-        <span class="flex-1 text-sm font-medium">{{ item.name }} <span class="text-gray-400">({{ item.maxScore }}分)</span></span>
-        <button @click="moveUp(idx)" :disabled="idx === 0" class="icon-btn">↑</button>
-        <button @click="moveDown(idx)" :disabled="idx === store.items.length - 1" class="icon-btn">↓</button>
-        <button @click="deleteItem(item)" class="icon-btn text-red-400 hover:text-red-600">🗑️</button>
+        class="border border-gray-100 rounded-xl px-4 py-3 mb-2 hover:bg-gray-50">
+
+        <!-- 一般顯示列 -->
+        <div v-if="editingId !== item.id" class="flex items-center gap-3">
+          <span class="flex-1 text-sm font-medium">{{ item.name }} <span class="text-gray-400">({{ item.maxScore }}分)</span></span>
+          <button @click="startEdit(item)" class="icon-btn text-indigo-400 hover:text-indigo-600" title="修改">✏️</button>
+          <button @click="moveUp(idx)" :disabled="idx === 0" class="icon-btn">↑</button>
+          <button @click="moveDown(idx)" :disabled="idx === store.items.length - 1" class="icon-btn">↓</button>
+          <button @click="deleteItem(item)" class="icon-btn text-red-400 hover:text-red-600">🗑️</button>
+        </div>
+
+        <!-- 編輯列 -->
+        <div v-else class="flex items-center gap-3">
+          <input v-model="editName" class="input flex-1" @keyup.enter="saveEdit(item)" @keyup.escape="cancelEdit" />
+          <input v-model.number="editMax" type="number" min="1" class="input w-24 text-center" @keyup.enter="saveEdit(item)" @keyup.escape="cancelEdit" />
+          <button @click="saveEdit(item)" class="btn-indigo px-4 py-1.5 text-xs">儲存</button>
+          <button @click="cancelEdit" class="text-sm text-gray-400 hover:text-gray-600 cursor-pointer">取消</button>
+        </div>
+        <p v-if="editError && editingId === item.id" class="text-red-500 text-xs mt-1">{{ editError }}</p>
       </div>
     </template>
   </div>
@@ -44,6 +58,40 @@ const newName = ref('')
 const newMax = ref(10)
 const addError = ref('')
 const importMsg = ref('')
+
+const editingId = ref(null)
+const editName = ref('')
+const editMax = ref(10)
+const editError = ref('')
+
+function startEdit(item) {
+  editingId.value = item.id
+  editName.value = item.name
+  editMax.value = item.maxScore
+  editError.value = ''
+}
+
+function cancelEdit() {
+  editingId.value = null
+  editError.value = ''
+}
+
+async function saveEdit(item) {
+  editError.value = ''
+  if (!editName.value.trim()) { editError.value = '名稱不可空白'; return }
+  if (!editMax.value || editMax.value < 1) { editError.value = '滿分須大於0'; return }
+  try {
+    const { data } = await api.put(`/subjects/${store.currentSubjectId}/items/${item.id}`, {
+      name: editName.value.trim(),
+      maxScore: editMax.value,
+    })
+    item.name = data.name
+    item.maxScore = data.maxScore
+    editingId.value = null
+  } catch (e) {
+    editError.value = e.response?.data?.error || '儲存失敗'
+  }
+}
 
 async function addItem() {
   addError.value = ''
