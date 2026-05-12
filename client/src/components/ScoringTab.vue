@@ -38,8 +38,8 @@
         </span>
       </div>
 
-      <!-- 評分項目：每項一列，全寬滑桿 -->
-      <div class="flex flex-col gap-3">
+      <!-- 評分項目：3欄格局 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div v-for="item in store.items" :key="item.id">
           <div class="flex justify-between text-sm mb-1">
             <span class="text-gray-700 font-medium">{{ item.name }}</span>
