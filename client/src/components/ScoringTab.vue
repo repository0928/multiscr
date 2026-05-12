@@ -14,6 +14,8 @@
     <!-- 學生卡片 -->
     <div v-for="student in filtered" :key="student.id"
       :class="['rounded-2xl p-5 mb-4 shadow', isFullScore(student) ? 'bg-red-50' : 'bg-white']">
+
+      <!-- 學生標題列 -->
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-2 flex-wrap">
           <span class="font-bold text-gray-800">
@@ -36,22 +38,28 @@
         </span>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- 評分項目：每項一列，全寬滑桿 -->
+      <div class="flex flex-col gap-3">
         <div v-for="item in store.items" :key="item.id">
           <div class="flex justify-between text-sm mb-1">
-            <span class="text-gray-600">{{ item.name }}</span>
-            <span class="text-gray-500">{{ localScore(student, item) }}/{{ item.maxScore }}</span>
+            <span class="text-gray-700 font-medium">{{ item.name }}</span>
+            <span class="text-gray-500 shrink-0 ml-3 tabular-nums">{{ localScore(student, item) }}/{{ item.maxScore }}</span>
           </div>
-          <input type="range" :min="0" :max="item.maxScore"
+          <input
+            type="range"
+            :min="0"
+            :max="item.maxScore"
             :value="localScore(student, item)"
+            :style="sliderStyle(localScore(student, item), item.maxScore)"
             @input="onSlider(student, item, $event)"
             @change="onSliderEnd(student, item, $event)"
-            class="slider w-full" />
+            class="score-slider w-full"
+          />
         </div>
       </div>
     </div>
 
-    <div v-if="filtered.length === 0" class="text-center text-gray-400 py-8">無符合班級的學生</div>
+    <div v-if="filtered.length === 0" class="text-center text-gray-400 py-8">無符合條件的學生</div>
   </div>
 </template>
 
@@ -63,8 +71,7 @@ const store = useAppStore()
 const yearFilter = ref('')
 const classFilter = ref('')
 
-// 本地快取，避免每次 input 直接觸發 store
-const localChanges = ref({}) // key: `${studentId}_${itemId}` → value
+const localChanges = ref({})
 
 const filtered = computed(() => {
   return store.students.filter(s => {
@@ -89,13 +96,19 @@ function isFullScore(student) {
   return maxTotal.value > 0 && getTotal(student) === maxTotal.value
 }
 
-// 移動滑桿：只更新本地
+function sliderStyle(value, max) {
+  const pct = max > 0 ? (value / max) * 100 : 0
+  return {
+    background: `linear-gradient(to right, #4f46e5 0%, #4f46e5 ${pct}%, #e2e8f0 ${pct}%, #e2e8f0 100%)`
+  }
+}
+
 function onSlider(student, item, e) {
   const key = `${student.id}_${item.id}`
   localChanges.value[key] = parseInt(e.target.value)
+  e.target.style.background = sliderStyle(localChanges.value[key], item.maxScore).background
 }
 
-// 放開滑桿：儲存到後端
 const saveTimers = {}
 function onSliderEnd(student, item, e) {
   const score = parseInt(e.target.value)
@@ -107,7 +120,6 @@ function onSliderEnd(student, item, e) {
   }, 300)
 }
 
-// 給滿分
 async function setFullScore(student) {
   for (const item of store.items) {
     const key = `${student.id}_${item.id}`
@@ -116,7 +128,6 @@ async function setFullScore(student) {
   }
 }
 
-// 清零
 async function clearScore(student) {
   for (const item of store.items) {
     const key = `${student.id}_${item.id}`
@@ -125,3 +136,37 @@ async function clearScore(student) {
   }
 }
 </script>
+
+<style scoped>
+.score-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.score-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #4f46e5;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(79, 70, 229, 0.4);
+  border: 2px solid #fff;
+}
+
+.score-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #4f46e5;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(79, 70, 229, 0.4);
+  border: 2px solid #fff;
+}
+</style>
